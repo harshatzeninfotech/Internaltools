@@ -17,7 +17,7 @@ const HeatmapComponent = () => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+  
     Papa.parse(file, {
       complete: (results) => {
         const rows = results.data;
@@ -25,59 +25,70 @@ const HeatmapComponent = () => {
           setError("CSV file is empty");
           return;
         }
-
+  
         const headers = rows[0].map((h) => h.trim());
         const data = rows.slice(1).map((row) => {
           const obj = {};
           row.forEach((value, index) => {
             if (index < headers.length) {
-              obj[headers[index]] = value.trim();
+              obj[headers[index]] = value.toString().trim(); // Ensure string
             }
           });
           return obj;
         });
-
+  
         const latKey = headers.find((h) => h.toLowerCase().includes("lat"));
         const lngKey = headers.find((h) => h.toLowerCase().includes("lon"));
-
+  
         if (!latKey || !lngKey) {
           setError("Latitude/Longitude headers not found in CSV");
           return;
         }
-
+  
+        // Parse coordinates and filter invalid points
         const heatmapData = data
-          .filter((row) => row[latKey] && row[lngKey])
           .map((row) => {
-            const lat = parseFloat(row[latKey].replace(",", "."));
-            const lng = parseFloat(row[lngKey].replace(",", "."));
-            return !isNaN(lat) && !isNaN(lng)
-              ? new window.google.maps.LatLng(lat, lng)
-              : null;
+            const latStr = row[latKey].replace(",", ".");
+            const lngStr = row[lngKey].replace(",", ".");
+            const lat = parseFloat(latStr);
+            const lng = parseFloat(lngStr);
+            if (isNaN(lat) || isNaN(lng)) {
+              console.warn("Invalid coordinates:", row[latKey], row[lngKey]);
+              return null;
+            }
+            return new window.google.maps.LatLng(lat, lng);
           })
           .filter((point) => point !== null);
-
+  
         if (heatmapData.length === 0) {
-          setError("No valid geographic points found");
+          setError("No valid coordinates found in CSV");
           return;
         }
-
-        if (heatmap) {
-          heatmap.setMap(null);
+  
+        if (!map) {
+          setError("Map not loaded. Try again.");
+          return;
         }
-
+  
+        // Clear existing heatmap
+        if (heatmap) heatmap.setMap(null);
+  
+        // Add new heatmap
         const newHeatmap = new window.google.maps.visualization.HeatmapLayer({
           data: heatmapData,
           map: map,
           radius: 20,
         });
-
         setHeatmap(newHeatmap);
-        setError("");
-
-        // Adjust map bounds
+  
+        // Adjust map view to show all points
         const bounds = new window.google.maps.LatLngBounds();
         heatmapData.forEach((point) => bounds.extend(point));
-        map.fitBounds(bounds);
+        map.fitBounds(bounds); // Zooms to include all points
+  
+        // Optional: Center on the first point
+        // map.setCenter(heatmapData[0]);
+        // map.setZoom(14);
       },
       header: false,
       skipEmptyLines: true,
@@ -85,12 +96,12 @@ const HeatmapComponent = () => {
   };
 
   const mapOptions = {
-    mapTypeId: "hybrid", // Options: "roadmap", "satellite", "hybrid", "terrain"
-    streetViewControl: true, // Enable Street View
-    mapTypeControl: true, // Enable switching between map types
-    fullscreenControl: true, // Enable fullscreen button
-    zoomControl: true, // Enable zoom buttons
-    tilt: 45, // Tilt for 3D buildings
+    mapTypeId: "hybrid",
+    streetViewControl: true,
+    mapTypeControl: true,
+    fullscreenControl: true,
+    zoomControl: true,
+    tilt: 45,
   };
 
   if (!isLoaded) return <div>Loading...</div>;
@@ -120,23 +131,11 @@ const HeatmapComponent = () => {
       )}
 
       <div className="flex-1 rounded-lg overflow-hidden shadow-lg">
-        {/* <GoogleMap
-          mapContainerStyle={{ height: "100%", width: "100%" }}
-          center={{ lat: 37.774546, lng: -122.433523 }}
-          zoom={13}
-          onLoad={(map) => setMap(map)}
-          options={{
-            mapTypeId: "roadmap",
-            streetViewControl: false,
-            mapTypeControl: false,
-            fullscreenControl: false,
-          }}
-        /> */}
         <GoogleMap
           mapContainerStyle={{ height: "100%", width: "100%" }}
-          center={{ lat: 37.774546, lng: -122.433523 }}
+          center={{ lat: 18.5152416229248, lng: 73.8504028320313 }}
           zoom={13}
-          options={mapOptions} // Apply custom options
+          options={mapOptions}
           onLoad={(map) => setMap(map)}
         />
       </div>
