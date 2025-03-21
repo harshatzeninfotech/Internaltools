@@ -24,7 +24,13 @@ const ToolsDashboard = () => {
       bgColor: "border-green-400 hover:border-green-600",
       textColor: "text-green-800",
     },
-    
+    {
+      id: 4,
+      title: "Runner Tools",
+      type: "runner-dashboard",
+      bgColor: "border-yellow-400 hover:border-yellow-600",
+      textColor: "text-yellow-800",
+    },
   ];
 
   return (
