@@ -6,6 +6,7 @@ import OverlayFeature from "./components/Overlay";
 import OverlayOptions from "./components/OverlayOptions";
 import ModifiedOverlay from "./components/ModifiedOverlay";
 import HeatmapComponent from "./components/HeatMap";
+import Video from "./components/Video";
 import "./App.css";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
           <Route path="/OverlayOptions" element={<OverlayOptions />} />
           <Route path="/ModifiedOverlay" element={<ModifiedOverlay />} />
           <Route path="/HeatmapComponent" element={<HeatmapComponent />} />
+          <Route path="/video" element={<Video />} />
         </Routes>
       </Router>
     </>
